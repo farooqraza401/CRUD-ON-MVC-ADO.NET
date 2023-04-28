@@ -1,0 +1,216 @@
+﻿
+@{
+    ViewBag.Title = "StudentForm";
+}
+
+<h2>StudentForm</h2>
+
+<table>
+    <tr>
+        <td>Name :</td>
+        <td><input type="text" id="txtname" /></td>
+    </tr>
+
+    <tr>
+        <td>Age :</td>
+        <td><input type="text" id="txtage" /></td>
+    </tr>
+
+    <tr>
+        <td>Roll No :</td>
+        <td><input type="text" id="txtrollno" /></td>
+    </tr>
+
+    <tr>
+        <td>Institute :</td>
+        <td><input type="text" id="txtinstitute" /></td>
+    </tr>
+
+    <tr>
+        <td>City :</td>
+        <td><input type="text" id="txtcity" /></td>
+    </tr>
+
+    <tr>
+        <td>Country :</td>
+        <td>
+            <select id="ddlcountry" onchange="GETSATEDATA()">
+                <option value="0">--Select--</option>
+            </select>
+        </td>
+    </tr>
+
+    <tr>
+        <td>State :</td>
+        <td>
+            <select id="ddlstate">
+                <option value="0">--Select--</option>
+            </select>
+        </td>
+    </tr>
+
+    <tr>
+        <td></td>
+        <td><input type="button" id="btninsert" value="Submit" onclick="SAVE()" /></td>
+    </tr>
+</table>
+
+<table id="tbl" style="background-color:cadetblue;color:white;width:1000px">
+    <tr style="background-color:lightseagreen;height:30px">
+        <th>Student ID</th>
+        <th>Student Name</th>
+        <th>Student Age</th>
+        <th>Student Roll Number</th>
+        <th>Student Institute</th>
+        <th>Student City</th>
+        <th>Student Country</th>
+        <th>Student State</th>
+        <th>Action</th>
+    </tr>
+</table>
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script type="text/javascript">
+    var IDD = 0;
+    $(document).ready(function () {
+        GETDATA();
+        GETCOUNTRYDATA();
+        $("#ddlstate").prop("disabled", true);
+        
+        
+    });
+
+    function CLEAR() {
+        $("#txtname").val("");
+        $("#txtage").val("");
+        $("#txtrollno").val("");
+        $("#txtinstitute").val("");
+        $("#txtcity").val("");
+        $("#ddlcountry").val("0");
+        $("#ddlstate").val("0");
+        $("#ddlstate").prop("disabled", true);
+        $("#btninsert").val("Submit");
+        IDD = 0;
+    }
+
+    function SAVE() {
+        $.ajax({
+            url: 'Student/InsertData',
+            type: 'post',
+            data: { Id: IDD, Name: $("#txtname").val(), Age: $("#txtage").val(), RollNo: $("#txtrollno").val(), Institute: $("#txtinstitute").val(), City: $("#txtcity").val(), Country: $("#ddlcountry").val(), State: $("#ddlstate").val() },
+            success: function () {
+                alert('Data has been saved successfully !!!');
+                GETDATA();
+                CLEAR();
+            },
+            error: function () {
+                alert('Data has not been saved !!!');
+            }
+        });
+    }
+
+    function GETDATA() {
+        $.ajax({
+            url: 'Student/GetData',
+            type: 'post',
+            data: {},
+            success: function (data) {
+                data = JSON.parse(data);
+                $("#tbl").find("tr:gt(0)").remove();
+                for (var i = 0; i < data.length; i++) {
+                    $("#tbl").append('<tr> <td>' + data[i].student_id + '</td> <td>' + data[i].name + '</td> <td>' + data[i].age + '</td> <td>' + data[i].rollno + '</td> <td>' + data[i].institute + '</td> <td>' + data[i].city + '</td> <td>' + data[i].cname + '</td> <td>' + data[i].sname + '</td> <td style="color:cadetblue"><input type="button" id="btnedit" value="Edit" onclick="EDITRECORD(' + data[i].student_id + ')" /> <input type="button" id="btndelete" value="Delete" onclick="DELETERECORD(' + data[i].student_id + ')" /></td> </tr>')
+                }
+            },
+            error: function () {
+                alert('Data has not been found !!!');
+            }
+        });
+    }
+
+    function EDITRECORD(student_id) {
+        $.ajax({
+            url: 'Student/EditRecord',
+            type: 'post',
+            data: { Id: student_id },
+            async: false,
+            success: function (data) {
+                data = JSON.parse(data);
+                $("#txtname").val(data[0].name);
+                $("#txtage").val(data[0].age);
+                $("#txtrollno").val(data[0].rollno);
+                $("#txtinstitute").val(data[0].institute);
+                $("#txtcity").val(data[0].city);
+                $("#ddlcountry").val(data[0].country);
+                GETSATEDATA();
+                $("#ddlstate").val(data[0].state);
+                $("#btninsert").val("Update");
+                IDD = student_id;
+            },
+            error: function () {
+                alert('Data has not been edited !!!');
+            }
+        });
+    }
+
+    function DELETERECORD(student_id) {
+        if (confirm('Are you sure you want to delete??')) {
+            $.ajax({
+                url: 'Student/DeleteRecord',
+                type: 'post',
+                data: { Id: student_id },
+                success: function () {
+                    alert('Data has been deleted successfully !!!');
+                    GETDATA();
+                },
+                error: function () {
+                    alert('Data has not been deleted !!!');
+                }
+            });
+        }
+    }
+
+    function GETCOUNTRYDATA() {
+        $.ajax({
+            url: 'Student/GetCountryData',
+            type: 'post',
+            data: {},
+            success: function (data) {
+                data = JSON.parse(data);
+      
+                for (var i = 0; i < data.length; i++) {
+                    $("#ddlcountry").append($('<option></option>').html(data[i].cname).val(data[i].cid));
+                }
+            },
+            error: function () {
+                alert('Country Data has not been found !!!');
+            }
+        });
+    }
+
+    function GETSATEDATA() {
+        $.ajax({
+            url: 'Student/GetStateData',
+            type: 'post',
+            data: { Id: $("#ddlcountry").val() },
+            async: false,
+            success: function (data) {
+                data = JSON.parse(data);
+                if ($("#ddlcountry").val() == "0") {
+                    $("#ddlstate").prop("disabled", true);
+                }
+                else {
+                    $("#ddlstate").prop("disabled", false);
+                    $("#ddlstate").empty();
+                    $("#ddlstate").append($('<option></option>').html("--Select--").val("0"));
+
+                    for (var i = 0; i < data.length; i++) {
+                        $("#ddlstate").append($('<option></option>').html(data[i].sname).val(data[i].sid));
+                    }
+                }
+            },
+            error: function () {
+                alert('State Data has not been found !!!');
+            }
+        });
+    }
+</script>
